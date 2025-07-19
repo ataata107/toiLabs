@@ -1,4 +1,4 @@
-name: Build and Test ToiLabs Docker Stack
+name: Build, Test, and Push ToiLabs Docker Stack
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,17 +20,25 @@ jobs:
       - name: Set up Docker (Compose v2 included)
         uses: docker/setup-docker-action@v2
 
-      - name: Log in to GitHub Container Registry (optional)
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build all services
-        run: docker compose -f docker-compose.yml build --no-cache
+      - name: Build Docker images
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model ./ml_service
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend ./spring_boot_app/health
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
 
-      - name: Run containers
+      - name: Push Docker images
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
+
+      - name: Run containers (optional)
         run: |
           docker compose -f docker-compose.yml up -d
           sleep 30
