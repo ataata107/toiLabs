@@ -29,14 +29,13 @@ jobs:
 
       - name: Build all services
         run: docker compose -f docker-compose.yml build --no-cache
-        working-directory: ${{ github.workspace }}
 
-      - name: Run containers (optional)
+      - name: Run containers
         run: |
           docker compose -f docker-compose.yml up -d
           sleep 30
           docker ps -a
 
-      - name: Shutdown
+      - name: Shutdown containers
         if: always()
-        run: docker compose down
+        run: docker compose -f docker-compose.yml down
