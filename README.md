@@ -159,11 +159,7 @@ Workflow file: `.github/workflows/docker-compose-build.yml`
 
 ## 👨‍💻 Author
 
-Built by [Your Name]  
+Built by Shazeb
 Feel free to fork, star ⭐, and contribute!
 
 ---
-
-## 📄 License
-
-This project is licensed under the MIT License.
