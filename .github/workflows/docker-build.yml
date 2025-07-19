@@ -28,8 +28,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build all services
-        run: |
-          docker compose -f docker-compose.yml build --no-cache
+        run: docker compose -f docker-compose.yml build --no-cache
+        working-directory: ${{ github.workspace }}
 
       - name: Run containers (optional)
         run: |
