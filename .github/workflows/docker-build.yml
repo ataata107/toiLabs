@@ -20,33 +20,33 @@ jobs:
       - name: Set up Docker (Compose v2 included)
         uses: docker/setup-docker-action@v2
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # - name: Log in to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker images
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model ./ml_service
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend ./spring_boot_app/health
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
+      # - name: Build Docker images
+      #   run: |
+      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model ./ml_service
+      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend ./spring_boot_app/health
+      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
 
-      - name: Push Docker images
-        run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
+      # - name: Push Docker images
+      #   run: |
+      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
+      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
+      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
 
-      - name: Run containers (optional)
-        run: |
-          docker compose -f docker-compose.yml up -d
-          sleep 30
-          docker ps -a
+      # - name: Run containers (optional)
+      #   run: |
+      #     docker compose -f docker-compose.yml up -d
+      #     sleep 30
+      #     docker ps -a
 
-      - name: Shutdown containers
-        if: always()
-        run: docker compose -f docker-compose.yml down
+      # - name: Shutdown containers
+      #   if: always()
+      #   run: docker compose -f docker-compose.yml down
       # ---------------- CLOUD FORMATION DEPLOYMENT ----------------
 
       - name: Configure AWS credentials
