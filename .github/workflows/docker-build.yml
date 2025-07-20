@@ -2,7 +2,7 @@ name: Build, Test, and Push ToiLabs Docker Stack
 
 on:
   push:
-    branches: [main]
+    branches: [main, aws]
   pull_request:
     branches: [main]
 
@@ -47,4 +47,80 @@ jobs:
       - name: Shutdown containers
         if: always()
         run: docker compose -f docker-compose.yml down
+      # ---------------- CLOUD FORMATION DEPLOYMENT ----------------
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: us-east-1 # Change to your region
+
+      - name: Deploy VPC and Networking (toilabs-network)
+        run: |
+          aws cloudformation deploy \
+            --template-file cloudformation/toilabs-network.yaml \
+            --stack-name toilabs-network \
+            --capabilities CAPABILITY_NAMED_IAM
+
+      - name: Get network stack outputs
+        id: get-network
+        run: |
+          aws cloudformation describe-stacks --stack-name toilabs-network \
+            --query "Stacks[0].Outputs" \
+            --output json > network-outputs.json
+
+      - name: Parse network outputs
+        id: parse-network
+        run: |
+          echo "::set-output name=vpc_id::$(jq -r '.[] | select(.OutputKey=="VPCId") | .OutputValue' network-outputs.json)"
+          echo "::set-output name=subnet1::$(jq -r '.[] | select(.OutputKey=="PublicSubnet1Id") | .OutputValue' network-outputs.json)"
+          echo "::set-output name=subnet2::$(jq -r '.[] | select(.OutputKey=="PublicSubnet2Id") | .OutputValue' network-outputs.json)"
+
+      - name: Deploy shared resources (toilabs-resources)
+        run: |
+          aws cloudformation deploy \
+            --template-file cloudformation/toilabs-resources.yaml \
+            --stack-name toilabs-resources \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              VPCId=${{ steps.parse-network.outputs.vpc_id }} \
+              PublicSubnet1Id=${{ steps.parse-network.outputs.subnet1 }} \
+              PublicSubnet2Id=${{ steps.parse-network.outputs.subnet2 }}
+
+      - name: Get resource stack outputs
+        id: get-resources
+        run: |
+          aws cloudformation describe-stacks --stack-name toilabs-resources \
+            --query "Stacks[0].Outputs" \
+            --output json > resources-outputs.json
+      - name: Parse ALB DNS
+        id: parse-alb
+        run: |
+          echo "::set-output name=alb_dns::$(jq -r '.[] | select(.OutputKey=="ALBDNS") | .OutputValue' resources-outputs.json)"
+
+      - name: Parse resource outputs
+        id: parse-resources
+        run: |
+          echo "::set-output name=frontend_tg::$(jq -r '.[] | select(.OutputKey=="FrontendTG") | .OutputValue' resources-outputs.json)"
+          echo "::set-output name=airflow_tg::$(jq -r '.[] | select(.OutputKey=="AirflowTG") | .OutputValue' resources-outputs.json)"
+          echo "::set-output name=task_role::$(jq -r '.[] | select(.OutputKey=="TaskExecutionRoleArn") | .OutputValue' resources-outputs.json)"
+          echo "::set-output name=svc_sg::$(jq -r '.[] | select(.OutputKey=="ServiceSG") | .OutputValue' resources-outputs.json)"
+
+      - name: Deploy ECS Cluster & Services (toilabs-services)
+        run: |
+          aws cloudformation deploy \
+            --template-file cloudformation/toilabs-services.yaml \
+            --stack-name toilabs-services \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides \
+              VPCId=${{ steps.parse-network.outputs.vpc_id }} \
+              PublicSubnet1Id=${{ steps.parse-network.outputs.subnet1 }} \
+              PublicSubnet2Id=${{ steps.parse-network.outputs.subnet2 }} \
+              FrontendTargetGroupArn=${{ steps.parse-resources.outputs.frontend_tg }} \
+              AirflowTargetGroupArn=${{ steps.parse-resources.outputs.airflow_tg }} \
+              TaskExecutionRoleArn=${{ steps.parse-resources.outputs.task_role }} \
+              ServiceSecurityGroupId=${{ steps.parse-resources.outputs.svc_sg }} \
+              KafkaAdvertisedHost=${{ steps.parse-alb.outputs.alb_dns }}
+
 #docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow

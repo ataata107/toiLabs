@@ -28,6 +28,7 @@ An end-to-end full-stack IoT monitoring platform that collects sensor data, runs
 - 🔁 WebSocket-powered UI updates
 - 🚢 Fully containerized stack (Docker)
 - 📈 Airflow DAG for automated dashboard generation
+- 🧰 Github Actions for CI/CD pipeline
 
 ---
 

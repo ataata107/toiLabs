@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ToiLabs shared resources - ALB, RDS, SGs, IAM roles
+
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnet1Id:
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnet2Id:
+    Type: AWS::EC2::Subnet::Id
+
+Resources:
+  # -------------------- SECURITY GROUPS --------------------
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP to ALB
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8089
+          ToPort: 8089
+          CidrIp: 0.0.0.0/0
+      Tags: [{ Key: Name, Value: toilabs-alb-sg }]
+
+  ServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Internal service-to-service communication
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+      Tags: [{ Key: Name, Value: toilabs-svc-sg }]
+
+  KafkaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Kafka access from local IP
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 9092
+          ToPort: 9092
+          CidrIp: YOUR_PUBLIC_IP/32 # Replace this
+      Tags: [{ Key: Name, Value: toilabs-kafka-sg }]
+
+  PostgresSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Postgres access from backend
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ServiceSecurityGroup
+      Tags: [{ Key: Name, Value: toilabs-postgres-sg }]
+
+  # -------------------- ALB + TARGET GROUPS --------------------
+
+  ToiLabsALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: toilabs-alb
+      Scheme: internet-facing
+      Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+      SecurityGroups: [!Ref ALBSecurityGroup]
+      Tags: [{ Key: Name, Value: toilabs-alb }]
+
+  FrontendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPCId
+      Protocol: HTTP
+      Port: 80
+      TargetType: ip
+      HealthCheckPath: /
+      Name: frontend-tg
+
+  AirflowTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPCId
+      Protocol: HTTP
+      Port: 8080
+      TargetType: ip
+      HealthCheckPath: /
+      Name: airflow-tg
+
+  ALBListenerHTTP:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ToiLabsALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref FrontendTargetGroup
+
+  AirflowPathRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListenerHTTP
+      Priority: 10
+      Conditions:
+        - Field: path-pattern
+          Values: ["/airflow/*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref AirflowTargetGroup
+
+  # -------------------- RDS POSTGRESQL --------------------
+
+  ToiLabsRDS:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: toilabs-postgres
+      AllocatedStorage: 20
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: 15.4
+      MasterUsername: toilabs_user
+      MasterUserPassword: toilabs_pass
+      VPCSecurityGroups: [!Ref PostgresSecurityGroup]
+      DBName: toilabs
+      PubliclyAccessible: false
+      MultiAZ: false
+      StorageType: gp2
+      DeletionProtection: false
+
+  # -------------------- IAM --------------------
+
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: toilabs-ecs-execution-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+Outputs:
+  ALBArn:
+    Value: !Ref ToiLabsALB
+  ALBDNS:
+    Value: !GetAtt ToiLabsALB.DNSName
+    Export:
+      Name: toilabs-alb-dns
+  FrontendTG:
+    Value: !Ref FrontendTargetGroup
+  AirflowTG:
+    Value: !Ref AirflowTargetGroup
+  ServiceSG:
+    Value: !Ref ServiceSecurityGroup
+  KafkaSG:
+    Value: !Ref KafkaSecurityGroup
+  PostgresSG:
+    Value: !Ref PostgresSecurityGroup
+  TaskExecutionRoleArn:
+    Value: !GetAtt ECSTaskExecutionRole.Arn
+  RDSEndpoint:
+    Value: !GetAtt ToiLabsRDS.Endpoint.Address

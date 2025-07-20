@@ -1,0 +1,278 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ECS Cluster and Services for ToiLabs stack
+
+Parameters:
+  VPCId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnet1Id:
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnet2Id:
+    Type: AWS::EC2::Subnet::Id
+  FrontendTargetGroupArn:
+    Type: String
+  AirflowTargetGroupArn:
+    Type: String
+  TaskExecutionRoleArn:
+    Type: String
+  ServiceSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  KafkaAdvertisedHost:
+    Type: String
+    Description: The public DNS name or IP address that clients should use to connect to Kafka
+
+Resources:
+  ToiLabsCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: toilabs-cluster
+
+  # -------------------- FRONTEND --------------------
+
+  FrontendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: toilabs-frontend-task
+      Cpu: "256"
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !Ref TaskExecutionRoleArn
+      ContainerDefinitions:
+        - Name: frontend
+          Image: docker.io/YOUR_DOCKERHUB_USERNAME/toilabs-frontend:latest
+          PortMappings:
+            - ContainerPort: 80
+
+  FrontendService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ToiLabsCluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+          SecurityGroups: [!Ref ServiceSecurityGroupId]
+      TaskDefinition: !Ref FrontendTaskDefinition
+      LoadBalancers:
+        - ContainerName: frontend
+          ContainerPort: 80
+          TargetGroupArn: !Ref FrontendTargetGroupArn
+
+  # -------------------- SPRING BACKEND --------------------
+
+  BackendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: toilabs-backend-task
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !Ref TaskExecutionRoleArn
+      ContainerDefinitions:
+        - Name: spring-backend
+          Image: docker.io/YOUR_DOCKERHUB_USERNAME/toilabs-spring-backend:latest
+          PortMappings:
+            - ContainerPort: 8080
+          Environment:
+            - Name: SPRING_DATASOURCE_URL
+              Value: jdbc:postgresql://toilabs-postgres:5432/toilabs
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: toilabs_user
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: toilabs_pass
+            - Name: ML_MODEL_URL
+              Value: http://ml-model:6000/predict
+            - Name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              Value: !Sub "${KafkaAdvertisedHost}:9092"
+
+  BackendService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ToiLabsCluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+          SecurityGroups: [!Ref ServiceSecurityGroupId]
+      TaskDefinition: !Ref BackendTaskDefinition
+
+  # -------------------- ML MODEL --------------------
+
+  MLTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: toilabs-ml-task
+      Cpu: "256"
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !Ref TaskExecutionRoleArn
+      ContainerDefinitions:
+        - Name: ml-model
+          Image: docker.io/YOUR_DOCKERHUB_USERNAME/toilabs-ml-model:latest
+          PortMappings:
+            - ContainerPort: 6000
+
+  MLService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ToiLabsCluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+          SecurityGroups: [!Ref ServiceSecurityGroupId]
+      TaskDefinition: !Ref MLTaskDefinition
+
+  # -------------------- AIRFLOW --------------------
+
+  AirflowTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: toilabs-airflow-task
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !Ref TaskExecutionRoleArn
+      ContainerDefinitions:
+        - Name: airflow
+          Image: apache/airflow:2.9.1
+          PortMappings:
+            - ContainerPort: 8080
+          Environment:
+            - Name: AIRFLOW__CORE__EXECUTOR
+              Value: LocalExecutor
+            - Name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+              Value: postgresql+psycopg2://toilabs_user:toilabs_pass@toilabs-postgres:5432/toilabs
+            - Name: AIRFLOW__CORE__LOAD_EXAMPLES
+              Value: "False"
+            - Name: AIRFLOW__LOGGING__LOGGING_LEVEL
+              Value: ERROR
+            - Name: GUNICORN_CMD_ARGS
+              Value: "--log-level ERROR"
+            - Name: PYTHONWARNINGS
+              Value: "ignore::SyntaxWarning"
+
+  AirflowService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ToiLabsCluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+          SecurityGroups: [!Ref ServiceSecurityGroupId]
+      TaskDefinition: !Ref AirflowTaskDefinition
+      LoadBalancers:
+        - ContainerName: airflow
+          ContainerPort: 8080
+          TargetGroupArn: !Ref AirflowTargetGroupArn
+
+  # -------------------- ZOOKEEPER --------------------
+
+  ZookeeperTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: toilabs-zookeeper-task
+      Cpu: "256"
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !Ref TaskExecutionRoleArn
+      ContainerDefinitions:
+        - Name: zookeeper
+          Image: confluentinc/cp-zookeeper:7.5.0
+          PortMappings:
+            - ContainerPort: 2181
+          Environment:
+            - Name: ZOOKEEPER_CLIENT_PORT
+              Value: "2181"
+            - Name: ZOOKEEPER_TICK_TIME
+              Value: "2000"
+
+  ZookeeperService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ToiLabsCluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+          SecurityGroups: [!Ref ServiceSecurityGroupId]
+      TaskDefinition: !Ref ZookeeperTaskDefinition
+
+  # -------------------- KAFKA --------------------
+
+  KafkaTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: toilabs-kafka-task
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      ExecutionRoleArn: !Ref TaskExecutionRoleArn
+      ContainerDefinitions:
+        - Name: kafka
+          Image: confluentinc/cp-kafka:7.5.0
+          PortMappings:
+            - ContainerPort: 9092
+          Environment:
+            - Name: KAFKA_BROKER_ID
+              Value: "1"
+            - Name: KAFKA_ZOOKEEPER_CONNECT
+              Value: zookeeper:2181
+            - Name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              Value: PLAINTEXT:PLAINTEXT
+            - Name: KAFKA_LISTENERS
+              Value: PLAINTEXT://0.0.0.0:9092
+            - Name: KAFKA_ADVERTISED_LISTENERS
+              Value: !Sub "PLAINTEXT://${KafkaAdvertisedHost}:9092"
+            - Name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              Value: "1"
+            - Name: KAFKA_LOG4J_ROOT_LOGLEVEL
+              Value: WARN
+            - Name: KAFKA_LOG4J_LOGGERS
+              Value: |
+                kafka=WARN,
+                kafka.controller=WARN,
+                kafka.log.LogCleaner=WARN,
+                state.change.logger=WARN,
+                kafka.producer.async.DefaultEventHandler=WARN
+
+  KafkaService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ToiLabsCluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+          SecurityGroups: [!Ref ServiceSecurityGroupId]
+      TaskDefinition: !Ref KafkaTaskDefinition
+
+Outputs:
+  ClusterName:
+    Value: !Ref ToiLabsCluster
+  FrontendTask:
+    Value: !Ref FrontendTaskDefinition
+  BackendTask:
+    Value: !Ref BackendTaskDefinition
+  MLTask:
+    Value: !Ref MLTaskDefinition
+  AirflowTask:
+    Value: !Ref AirflowTaskDefinition
