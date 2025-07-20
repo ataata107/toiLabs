@@ -14,6 +14,7 @@ An end-to-end full-stack IoT monitoring platform that collects sensor data, runs
 | Data Storage     | PostgreSQL                                      |
 | Messaging        | Apache Kafka, Zookeeper                         |
 | Infrastructure   | Docker Compose, GitHub Actions (CI/CD), Airflow |
+| ETL              | Airflow                                         |
 
 ---
 
