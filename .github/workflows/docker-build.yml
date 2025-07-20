@@ -55,6 +55,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1 # Change to your region
+      - name: Ensure ECS service-linked role exists
+        run: |
+          aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com || echo "Service-linked role already exists or not needed"
 
       - name: Deploy VPC and Networking (toilabs-network)
         run: |
