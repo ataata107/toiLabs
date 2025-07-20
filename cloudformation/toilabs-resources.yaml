@@ -133,7 +133,7 @@ Resources:
       AllocatedStorage: 20
       DBInstanceClass: db.t3.micro
       Engine: postgres
-      EngineVersion: 15.4
+      EngineVersion: 17.5
       MasterUsername: toilabs_user
       MasterUserPassword: toilabs_pass
       DBSubnetGroupName: !Ref ToiLabsDBSubnetGroup
