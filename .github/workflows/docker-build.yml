@@ -2,7 +2,7 @@ name: Build, Test, and Push ToiLabs Docker Stack
 
 on:
   push:
-    branches: [main, aws]
+    branches: [main, AWS]
   pull_request:
     branches: [main]
 
