@@ -154,7 +154,7 @@ Resources:
             - Name: AIRFLOW__CORE__EXECUTOR
               Value: LocalExecutor
             - Name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
-              Value: postgresql+psycopg2://toilabs_user:toilabs_pass@toilabs-postgres:5432/toilabs
+              Value: !Sub "postgresql+psycopg2://toilabs_user:toilabs_pass@${RDSEndpoint}:5432/toilabs"
             - Name: AIRFLOW__CORE__LOAD_EXAMPLES
               Value: "False"
             - Name: AIRFLOW__LOGGING__LOGGING_LEVEL

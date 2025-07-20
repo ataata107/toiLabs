@@ -49,7 +49,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 9092
           ToPort: 9092
-          CidrIp: 0.0.0.0/32 # Replace this
+          CidrIp: 0.0.0.0/0 # Replace this
       Tags: [{ Key: Name, Value: toilabs-kafka-sg }]
 
   PostgresSecurityGroup:
@@ -63,6 +63,13 @@ Resources:
           ToPort: 5432
           SourceSecurityGroupId: !Ref ServiceSecurityGroup
       Tags: [{ Key: Name, Value: toilabs-postgres-sg }]
+  ToiLabsDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets for ToiLabs RDS
+      SubnetIds:
+        - !Ref PublicSubnet1Id
+        - !Ref PublicSubnet2Id
 
   # -------------------- ALB + TARGET GROUPS --------------------
 
@@ -129,6 +136,7 @@ Resources:
       EngineVersion: 15.4
       MasterUsername: toilabs_user
       MasterUserPassword: toilabs_pass
+      DBSubnetGroupName: !Ref ToiLabsDBSubnetGroup
       VPCSecurityGroups: [!Ref PostgresSecurityGroup]
       DBName: toilabs
       PubliclyAccessible: false
