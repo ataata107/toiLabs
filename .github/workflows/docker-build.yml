@@ -37,6 +37,7 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow
 
       - name: Run containers (optional)
         run: |

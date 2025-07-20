@@ -6,14 +6,14 @@ An end-to-end full-stack IoT monitoring platform that collects sensor data, runs
 
 ## 🔧 Tech Stack
 
-| Layer            | Technology                             |
-| ---------------- | -------------------------------------- |
-| Frontend         | React, WebSocket, Nginx                |
-| Backend          | Spring Boot, Kafka Consumer, REST API  |
-| Machine Learning | Flask (Python), Predictive Model       |
-| Data Storage     | PostgreSQL                             |
-| Messaging        | Apache Kafka, Zookeeper                |
-| Infrastructure   | Docker Compose, GitHub Actions (CI/CD) |
+| Layer            | Technology                                      |
+| ---------------- | ----------------------------------------------- |
+| Frontend         | React, WebSocket, Nginx                         |
+| Backend          | Spring Boot, Kafka Consumer, REST API           |
+| Machine Learning | Flask (Python), Predictive Model                |
+| Data Storage     | PostgreSQL                                      |
+| Messaging        | Apache Kafka, Zookeeper                         |
+| Infrastructure   | Docker Compose, GitHub Actions (CI/CD), Airflow |
 
 ---
 
@@ -26,6 +26,7 @@ An end-to-end full-stack IoT monitoring platform that collects sensor data, runs
 - 🧠 Backend processing with Kafka and Spring
 - 🔁 WebSocket-powered UI updates
 - 🚢 Fully containerized stack (Docker)
+- 📈 Airflow DAG for automated dashboard generation
 
 ---
 
@@ -37,6 +38,7 @@ ToiLabs/
 ├── frontend/            # React + Nginx frontend
 ├── ml_service/          # Flask-based ML prediction service
 ├── kafka_producer/      # Python Kafka producer
+├── airflow/             # Airflow DAGs for automation
 ├── spring_boot_app/     # Spring Boot backend with Kafka + DB
 │   └── health/          # Core backend logic (controller/service/repo)
 └── .github/             # GitHub Actions CI workflows
@@ -66,6 +68,7 @@ The services will launch:
 - ⚙️ **Backend:** http://localhost:8080
 - 🧠 **ML Model:** http://localhost:6000/predict
 - 🐘 **PostgreSQL:** localhost:5432
+- 🌐 **Airflow:** http://localhost:8089 (default credentials: `airflow` / `airflow`)
 
 ### 3. Kafka Producer
 
@@ -94,7 +97,8 @@ pip install kafka-python
                                 │
                                 ├─> Sends to ML Model (Flask)
                                 ├─> Stores in PostgreSQL
-                                └─> Broadcast via WebSocket
+                                ├─> Broadcast via WebSocket
+                                └─> Triggers Airflow DAG
                                                  │
                                                  ▼
                                     [ React Frontend Dashboard ]
@@ -144,6 +148,7 @@ Workflow file: `.github/workflows/docker-compose-build.yml`
 - Flask ML model API
 - Spring Boot Kafka consumer + WebSocket backend
 - Nginx-backed React frontend
+- Airflow build and save the files on the local folder
 
 ---
 

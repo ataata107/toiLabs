@@ -78,5 +78,28 @@ services:
     depends_on:
       - spring-backend
 
+  airflow:
+    image: apache/airflow:2.9.1
+    container_name: toilabs-airflow
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://toilabs_user:toilabs_pass@postgres:5432/toilabs
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__LOGGING__LOGGING_LEVEL=ERROR
+      - GUNICORN_CMD_ARGS=--log-level ERROR
+      - PYTHONWARNINGS=ignore::SyntaxWarning
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/dags/output:/opt/airflow/dags/output
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/entrypoint.sh:/entrypoint.sh
+    ports:
+      - "8089:8080"
+    entrypoint: ["bash", "/entrypoint.sh"]
+
 volumes:
   postgres-data:
+  airflow-logs:
