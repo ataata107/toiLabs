@@ -106,6 +106,7 @@ jobs:
           echo "::set-output name=airflow_tg::$(jq -r '.[] | select(.OutputKey=="AirflowTG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=task_role::$(jq -r '.[] | select(.OutputKey=="TaskExecutionRoleArn") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=svc_sg::$(jq -r '.[] | select(.OutputKey=="ServiceSG") | .OutputValue' resources-outputs.json)"
+          echo "::set-output name=rds_endpoint::$(jq -r '.[] | select(.OutputKey=="RDSEndpoint") | .OutputValue' resources-outputs.json)"
 
       - name: Deploy ECS Cluster & Services (toilabs-services)
         run: |
@@ -121,6 +122,7 @@ jobs:
               AirflowTargetGroupArn=${{ steps.parse-resources.outputs.airflow_tg }} \
               TaskExecutionRoleArn=${{ steps.parse-resources.outputs.task_role }} \
               ServiceSecurityGroupId=${{ steps.parse-resources.outputs.svc_sg }} \
-              KafkaAdvertisedHost=${{ steps.parse-alb.outputs.alb_dns }}
+              KafkaAdvertisedHost=${{ steps.parse-alb.outputs.alb_dns }} \
+              RDSEndpoint=${{ steps.parse-resources.outputs.rds_endpoint }}
 
 #docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow

@@ -49,7 +49,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 9092
           ToPort: 9092
-          CidrIp: YOUR_PUBLIC_IP/32 # Replace this
+          CidrIp: 0.0.0.0/32 # Replace this
       Tags: [{ Key: Name, Value: toilabs-kafka-sg }]
 
   PostgresSecurityGroup:

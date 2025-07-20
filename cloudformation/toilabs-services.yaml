@@ -19,6 +19,9 @@ Parameters:
   KafkaAdvertisedHost:
     Type: String
     Description: The public DNS name or IP address that clients should use to connect to Kafka
+  RDSEndpoint:
+    Type: String
+    Description: RDS PostgreSQL endpoint
 
 Resources:
   ToiLabsCluster:
@@ -39,7 +42,7 @@ Resources:
       ExecutionRoleArn: !Ref TaskExecutionRoleArn
       ContainerDefinitions:
         - Name: frontend
-          Image: docker.io/YOUR_DOCKERHUB_USERNAME/toilabs-frontend:latest
+          Image: docker.io/ataata107/toilabs-frontend:latest
           PortMappings:
             - ContainerPort: 80
 
@@ -73,12 +76,12 @@ Resources:
       ExecutionRoleArn: !Ref TaskExecutionRoleArn
       ContainerDefinitions:
         - Name: spring-backend
-          Image: docker.io/YOUR_DOCKERHUB_USERNAME/toilabs-spring-backend:latest
+          Image: docker.io/ataata107/toilabs-spring-backend:latest
           PortMappings:
             - ContainerPort: 8080
           Environment:
             - Name: SPRING_DATASOURCE_URL
-              Value: jdbc:postgresql://toilabs-postgres:5432/toilabs
+              Value: jdbc:postgresql://${RDSEndpoint}:5432/toilabs
             - Name: SPRING_DATASOURCE_USERNAME
               Value: toilabs_user
             - Name: SPRING_DATASOURCE_PASSWORD
@@ -114,7 +117,7 @@ Resources:
       ExecutionRoleArn: !Ref TaskExecutionRoleArn
       ContainerDefinitions:
         - Name: ml-model
-          Image: docker.io/YOUR_DOCKERHUB_USERNAME/toilabs-ml-model:latest
+          Image: docker.io/ataata107/toilabs-ml-model:latest
           PortMappings:
             - ContainerPort: 6000
 
