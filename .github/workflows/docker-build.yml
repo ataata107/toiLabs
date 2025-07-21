@@ -36,7 +36,6 @@ jobs:
       #   run: |
       #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
       #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
 
       # - name: Run containers (optional)
       #   run: |
@@ -111,6 +110,19 @@ jobs:
           echo "::set-output name=svc_sg::$(jq -r '.[] | select(.OutputKey=="ServiceSG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=rds_endpoint::$(jq -r '.[] | select(.OutputKey=="RDSEndpoint") | .OutputValue' resources-outputs.json)"
 
+      - name: Generate NGINX config from template
+        env:
+          BACKEND_HOST: ${{ steps.parse-alb.outputs.alb_dns }}
+        run: |
+          envsubst < frontend/nginx.template.conf > frontend/nginx.conf
+
+      - name: Build Docker images
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
+
+      - name: Push Docker images
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
       - name: Deploy ECS Cluster & Services (toilabs-services)
         run: |
           aws cloudformation deploy \
