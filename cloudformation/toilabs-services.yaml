@@ -82,7 +82,7 @@ Resources:
     Properties:
       Family: toilabs-backend-task
       Cpu: "512"
-      Memory: "1024"
+      Memory: "2048"
       NetworkMode: awsvpc
       RequiresCompatibilities: [FARGATE]
       ExecutionRoleArn: !Ref TaskExecutionRoleArn

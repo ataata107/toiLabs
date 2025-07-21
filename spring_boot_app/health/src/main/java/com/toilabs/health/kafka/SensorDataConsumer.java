@@ -7,27 +7,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 @Component
 public class SensorDataConsumer {
 
-    private final ExecutorService executor = Executors.newFixedThreadPool(1);
+    // ObjectMapper is thread-safe — reuse it!
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private ProcessingService processingService;
 
-    @KafkaListener(topics = "sensor.health.raw", groupId = "toi-health")
+    @KafkaListener(
+        topics = "sensor.health.raw",
+        groupId = "toi-health",
+        // Optionally add concurrency here or in container factory configuration
+        // concurrency = "4"
+    )
     public void listen(String message) {
-        executor.submit(() -> {
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                SensorData data = mapper.readValue(message, SensorData.class);
-                processingService.process(data);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        try {
+            SensorData data = mapper.readValue(message, SensorData.class);
+            processingService.process(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Consider logging properly instead of printing in production
+        }
     }
 }
