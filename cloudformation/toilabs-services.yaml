@@ -45,7 +45,12 @@ Resources:
           Image: docker.io/ataata107/toilabs-frontend:latest
           PortMappings:
             - ContainerPort: 80
-
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/toilabs
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: toilabs
   FrontendService:
     Type: AWS::ECS::Service
     Properties:
@@ -90,6 +95,12 @@ Resources:
               Value: http://ml-model:6000/predict
             - Name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               Value: !Sub "${KafkaAdvertisedHost}:9092"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/toilabs
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: toilabs
 
   BackendService:
     Type: AWS::ECS::Service
@@ -120,6 +131,12 @@ Resources:
           Image: docker.io/ataata107/toilabs-ml-model:latest
           PortMappings:
             - ContainerPort: 6000
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/toilabs
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: toilabs
 
   MLService:
     Type: AWS::ECS::Service
@@ -163,6 +180,12 @@ Resources:
               Value: "--log-level ERROR"
             - Name: PYTHONWARNINGS
               Value: "ignore::SyntaxWarning"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/toilabs
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: toilabs
 
   AirflowService:
     Type: AWS::ECS::Service
@@ -202,6 +225,12 @@ Resources:
               Value: "2181"
             - Name: ZOOKEEPER_TICK_TIME
               Value: "2000"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/toilabs
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: toilabs
 
   ZookeeperService:
     Type: AWS::ECS::Service
@@ -254,6 +283,12 @@ Resources:
                 kafka.log.LogCleaner=WARN,
                 state.change.logger=WARN,
                 kafka.producer.async.DefaultEventHandler=WARN
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: /ecs/toilabs
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: toilabs
 
   KafkaService:
     Type: AWS::ECS::Service
