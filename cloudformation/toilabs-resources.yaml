@@ -43,14 +43,16 @@ Resources:
   KafkaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow Kafka access from local IP
+      GroupDescription: Allow public Kafka IAM access on port 9198
       VpcId: !Ref VPCId
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 9092
-          ToPort: 9092
-          CidrIp: 0.0.0.0/0 # Replace this
-      Tags: [{ Key: Name, Value: toilabs-kafka-sg }]
+          FromPort: 9198
+          ToPort: 9198
+          CidrIp: 0.0.0.0/0 # For true public, or specify your allowed IP/range
+      Tags:
+        - Key: Name
+          Value: toilabs-kafka-sg
 
   PostgresSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -168,6 +170,12 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref BackendTargetGroup
 
+  MyClusterConfig:
+    Type: AWS::MSK::Configuration
+    Properties:
+      Name: !Sub "${ClusterName}-config"
+      ServerProperties: !Join ["\n", ["auto.create.topics.enable=true"]]
+
   # -------------------- RDS POSTGRESQL --------------------
 
   ToiLabsRDS:
@@ -193,6 +201,19 @@ Resources:
     Properties:
       ClusterName: toilabs-msk-cluster
       KafkaVersion: 3.6.0
+      ConfigurationInfo:
+        Arn: !Ref MyClusterConfig
+        Revision: 1
+      ClientAuthentication:
+        Unauthenticated:
+          Enabled: False # Must be disabled for public clusters
+        Sasl:
+          Iam:
+            Enabled: True
+      EncryptionInfo:
+        EncryptionInTransit: # Must be set for public clusters
+          ClientBroker: TLS
+          InCluster: true
       NumberOfBrokerNodes: 1
       BrokerNodeGroupInfo:
         InstanceType: kafka.t3.small
@@ -204,9 +225,6 @@ Resources:
         ConnectivityInfo:
           PublicAccess:
             Type: SERVICE_PROVIDED_EIPS
-      EncryptionInfo:
-        EncryptionInTransit:
-          ClientBroker: TLS
 
   # -------------------- IAM --------------------
 
