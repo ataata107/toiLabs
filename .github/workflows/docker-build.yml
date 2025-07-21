@@ -111,10 +111,9 @@ jobs:
           echo "::set-output name=rds_endpoint::$(jq -r '.[] | select(.OutputKey=="RDSEndpoint") | .OutputValue' resources-outputs.json)"
 
       - name: Generate NGINX config from template
-        env:
-          BACKEND_HOST: ${{ steps.parse-alb.outputs.alb_dns }}
         run: |
-          envsubst < frontend/nginx.template.conf > frontend/nginx.conf
+          export BACKEND_HOST=${{ steps.parse-alb.outputs.alb_dns }}
+          envsubst '$BACKEND_HOST' < frontend/nginx.template.conf > frontend/nginx.conf
 
       - name: Build Docker images
         run: |
