@@ -121,7 +121,7 @@ jobs:
         id: msk-brokers
         run: |
           CLUSTER_ARN=$(aws kafka list-clusters --query "ClusterInfoList[?ClusterName=='toilabs-msk-cluster'].ClusterArn" --output text)
-          BROKERS=$(aws kafka get-bootstrap-brokers --cluster-arn $CLUSTER_ARN --query "BootstrapBrokerString" --output text)
+          BROKERS=$(aws kafka get-bootstrap-brokers --cluster-arn $CLUSTER_ARN --query "BootstrapBrokerStringSaslIam" --output text)
           echo "::set-output name=bootstrap_brokers::$BROKERS"
 
       - name: Deploy ECS Cluster & Services (toilabs-services)

@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: ToiLabs shared resources - ALB, RDS, SGs, IAM roles
-#Kafka global
+#Kafka global what is sg
 #Kafka serverless
 #Update nginx.conf and connect uri
 #Update airflow
