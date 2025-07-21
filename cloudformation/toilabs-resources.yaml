@@ -299,6 +299,7 @@ Resources:
                   - kafka-cluster:DescribeTopic
                   - kafka-cluster:ReadData
                   - kafka-cluster:DescribeGroup
+                  - kafka-cluster:AlterGroup
                   - kafka-cluster:JoinGroup
                   - kafka-cluster:SyncGroup
                   - kafka-cluster:SendHeartbeat
