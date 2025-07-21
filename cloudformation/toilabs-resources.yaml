@@ -1,5 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: ToiLabs shared resources - ALB, RDS, SGs, IAM roles
+#Kafka global
+#Kafka serverless
+#Update nginx.conf and connect uri
+#Update airflow
 
 Parameters:
   VPCId:
@@ -189,17 +193,20 @@ Resources:
     Properties:
       ClusterName: toilabs-msk-cluster
       KafkaVersion: 3.6.0
-      NumberOfBrokerNodes: 2
+      NumberOfBrokerNodes: 1
       BrokerNodeGroupInfo:
-        InstanceType: kafka.m5.large
+        InstanceType: kafka.t3.small
         ClientSubnets:
           - !Ref PublicSubnet1Id
           - !Ref PublicSubnet2Id
         SecurityGroups:
           - !Ref KafkaSecurityGroup
+        ConnectivityInfo:
+          PublicAccess:
+            Type: SERVICE_PROVIDED_EIPS
       EncryptionInfo:
         EncryptionInTransit:
-          ClientBroker: PLAINTEXT
+          ClientBroker: TLS
 
   # -------------------- IAM --------------------
 
