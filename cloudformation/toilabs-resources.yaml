@@ -177,7 +177,7 @@ Resources:
   MyClusterConfig:
     Type: AWS::MSK::Configuration
     Properties:
-      Name: !Sub "${ClusterName}-config"
+      Name: toilabs-msk-cluster
       ServerProperties: !Join ["\n", ["auto.create.topics.enable=true"]]
 
   # -------------------- RDS POSTGRESQL --------------------
