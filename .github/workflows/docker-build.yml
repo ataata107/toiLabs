@@ -96,7 +96,7 @@ jobs:
           echo "::set-output name=frontend_tg::$(jq -r '.[] | select(.OutputKey=="FrontendTG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=airflow_tg::$(jq -r '.[] | select(.OutputKey=="AirflowTG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=ml_tg::$(jq -r '.[] | select(.OutputKey=="MLModelTG") | .OutputValue' resources-outputs.json)"
-          echo "::set-output name=backend_tg::$(jq -r '.[] | select(.OutputKey=="BackendlTG") | .OutputValue' resources-outputs.json)"
+          echo "::set-output name=backend_tg::$(jq -r '.[] | select(.OutputKey=="BackendTG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=task_role::$(jq -r '.[] | select(.OutputKey=="TaskExecutionRoleArn") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=svc_sg::$(jq -r '.[] | select(.OutputKey=="ServiceSG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=rds_endpoint::$(jq -r '.[] | select(.OutputKey=="RDSEndpoint") | .OutputValue' resources-outputs.json)"
