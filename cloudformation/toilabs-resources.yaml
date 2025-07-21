@@ -276,6 +276,34 @@ Resources:
               - kafka-cluster:SyncGroup
               - kafka-cluster:SendHeartbeat
             Resource: "*"
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: toilabs-ecs-task-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: KafkaAccessPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kafka-cluster:Connect
+                  - kafka-cluster:DescribeCluster
+                  - kafka-cluster:DescribeTopic
+                  - kafka-cluster:ReadData
+                  - kafka-cluster:DescribeGroup
+                  - kafka-cluster:JoinGroup
+                  - kafka-cluster:SyncGroup
+                  - kafka-cluster:SendHeartbeat
+                Resource: "*"
+
 Outputs:
   ALBArn:
     Value: !Ref ToiLabsALB
@@ -301,3 +329,7 @@ Outputs:
     Value: !Ref MLModelTargetGroup
   BackendTG:
     Value: !Ref BackendTargetGroup
+  TaskRoleArn:
+    Value: !GetAtt ECSTaskRole.Arn
+    Export:
+      Name: toilabs-ecs-task-role-arn

@@ -98,6 +98,7 @@ jobs:
           echo "::set-output name=ml_tg::$(jq -r '.[] | select(.OutputKey=="MLModelTG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=backend_tg::$(jq -r '.[] | select(.OutputKey=="BackendTG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=task_role::$(jq -r '.[] | select(.OutputKey=="TaskExecutionRoleArn") | .OutputValue' resources-outputs.json)"
+          echo "::set-output name=task_role_arn::$(jq -r '.[] | select(.OutputKey=="TaskRoleArn") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=svc_sg::$(jq -r '.[] | select(.OutputKey=="ServiceSG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=rds_endpoint::$(jq -r '.[] | select(.OutputKey=="RDSEndpoint") | .OutputValue' resources-outputs.json)"
 
@@ -138,6 +139,7 @@ jobs:
               FrontendTargetGroupArn=${{ steps.parse-resources.outputs.frontend_tg }} \
               AirflowTargetGroupArn=${{ steps.parse-resources.outputs.airflow_tg }} \
               TaskExecutionRoleArn=${{ steps.parse-resources.outputs.task_role }} \
+              TaskRoleArn=${{ steps.parse-resources.outputs.task_role_arn }} \
               ServiceSecurityGroupId=${{ steps.parse-resources.outputs.svc_sg }} \
               KafkaAdvertisedHost=${{ steps.msk-brokers.outputs.bootstrap_brokers }} \
               RDSEndpoint=${{ steps.parse-resources.outputs.rds_endpoint }} \
