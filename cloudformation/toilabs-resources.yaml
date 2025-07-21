@@ -102,6 +102,26 @@ Resources:
       HealthCheckPath: /
       Name: airflow-tg
 
+  MLModelTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPCId
+      Protocol: HTTP
+      Port: 6000
+      TargetType: ip
+      HealthCheckPath: /
+      Name: ml-model-tg
+
+  BackendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPCId
+      Protocol: HTTP
+      Port: 8081
+      TargetType: ip
+      HealthCheckPath: /
+      Name: ml-model-tg
+
   ALBListenerHTTP:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -123,6 +143,30 @@ Resources:
       Actions:
         - Type: forward
           TargetGroupArn: !Ref AirflowTargetGroup
+
+  MLModelPathRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListenerHTTP
+      Priority: 15
+      Conditions:
+        - Field: path-pattern
+          Values: ["/ml-model/*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref MLModelTargetGroup
+
+  BackendPathRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListenerHTTP
+      Priority: 15
+      Conditions:
+        - Field: path-pattern
+          Values: ["/spring-backend/*"]
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref BackendTargetGroup
 
   # -------------------- RDS POSTGRESQL --------------------
 
@@ -191,3 +235,7 @@ Outputs:
     Value: !GetAtt ECSTaskExecutionRole.Arn
   RDSEndpoint:
     Value: !GetAtt ToiLabsRDS.Endpoint.Address
+  MLModelTG:
+    Value: !Ref MLModelTargetGroup
+  BackendTG:
+    Value: !Ref BackendTargetGroup

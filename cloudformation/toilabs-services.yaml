@@ -22,6 +22,13 @@ Parameters:
   RDSEndpoint:
     Type: String
     Description: RDS PostgreSQL endpoint
+  MLModelTargetGroupArn:
+    Type: String
+  BackendTargetGroupArn:
+    Type: String
+  ALBDNS:
+    Type: String
+    Description: DNS name of the shared Application Load Balancer
 
 Resources:
   ToiLabsCluster:
@@ -83,18 +90,21 @@ Resources:
         - Name: spring-backend
           Image: docker.io/ataata107/toilabs-spring-backend:latest
           PortMappings:
-            - ContainerPort: 8080
+            - ContainerPort: 8081
           Environment:
             - Name: SPRING_DATASOURCE_URL
-              Value: jdbc:postgresql://${RDSEndpoint}:5432/toilabs
+              Value: !Sub "jdbc:postgresql://${RDSEndpoint}:5432/toilabs"
             - Name: SPRING_DATASOURCE_USERNAME
               Value: toilabs_user
             - Name: SPRING_DATASOURCE_PASSWORD
               Value: toilabs_pass
             - Name: ML_MODEL_URL
-              Value: http://ml-model:6000/predict
+              Value: !Sub "http://${ALBDNS}/ml-model/predict"
             - Name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               Value: !Sub "${KafkaAdvertisedHost}:9092"
+            - Name: ALBDNS
+              Value: !Ref ALBDNS
+
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -114,6 +124,10 @@ Resources:
           Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
           SecurityGroups: [!Ref ServiceSecurityGroupId]
       TaskDefinition: !Ref BackendTaskDefinition
+      LoadBalancers:
+        - ContainerName: spring-backend
+          ContainerPort: 8081
+          TargetGroupArn: !Ref BackendTargetGroupArn
 
   # -------------------- ML MODEL --------------------
 
@@ -150,6 +164,10 @@ Resources:
           Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
           SecurityGroups: [!Ref ServiceSecurityGroupId]
       TaskDefinition: !Ref MLTaskDefinition
+      LoadBalancers:
+        - ContainerName: ml-model
+          ContainerPort: 6000
+          TargetGroupArn: !Ref MLModelTargetGroupArn
 
   # -------------------- AIRFLOW --------------------
 
@@ -186,11 +204,10 @@ Resources:
               awslogs-group: /ecs/toilabs
               awslogs-region: us-east-1
               awslogs-stream-prefix: toilabs
-          Command:
+          Command: #pip install matplotlib pandas sqlalchemy psycopg2-binary && \
             - "bash"
             - "-c"
             - |
-              pip install matplotlib pandas sqlalchemy psycopg2-binary && \
               airflow db init && \
               airflow users create \
                 --username admin \

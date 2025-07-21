@@ -26,17 +26,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # - name: Build Docker images
-      #   run: |
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model ./ml_service
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend ./spring_boot_app/health
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
-
-      # - name: Push Docker images
-      #   run: |
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
-
       # - name: Run containers (optional)
       #   run: |
       #     docker compose -f docker-compose.yml up -d
@@ -106,6 +95,8 @@ jobs:
         run: |
           echo "::set-output name=frontend_tg::$(jq -r '.[] | select(.OutputKey=="FrontendTG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=airflow_tg::$(jq -r '.[] | select(.OutputKey=="AirflowTG") | .OutputValue' resources-outputs.json)"
+          echo "::set-output name=ml_tg::$(jq -r '.[] | select(.OutputKey=="MLModelTG") | .OutputValue' resources-outputs.json)"
+          echo "::set-output name=backend_tg::$(jq -r '.[] | select(.OutputKey=="BackendlTG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=task_role::$(jq -r '.[] | select(.OutputKey=="TaskExecutionRoleArn") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=svc_sg::$(jq -r '.[] | select(.OutputKey=="ServiceSG") | .OutputValue' resources-outputs.json)"
           echo "::set-output name=rds_endpoint::$(jq -r '.[] | select(.OutputKey=="RDSEndpoint") | .OutputValue' resources-outputs.json)"
@@ -117,11 +108,15 @@ jobs:
 
       - name: Build Docker images
         run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model ./ml_service
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend ./spring_boot_app/health
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
-
       - name: Push Docker images
         run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
+
       - name: Deploy ECS Cluster & Services (toilabs-services)
         run: |
           aws cloudformation deploy \
@@ -137,6 +132,9 @@ jobs:
               TaskExecutionRoleArn=${{ steps.parse-resources.outputs.task_role }} \
               ServiceSecurityGroupId=${{ steps.parse-resources.outputs.svc_sg }} \
               KafkaAdvertisedHost=${{ steps.parse-alb.outputs.alb_dns }} \
-              RDSEndpoint=${{ steps.parse-resources.outputs.rds_endpoint }}
+              RDSEndpoint=${{ steps.parse-resources.outputs.rds_endpoint }} \
+              MLModelTargetGroupArn=${{ steps.parse-resources.outputs.ml_tg }} \
+              BackendTargetGroupArn=${{ steps.parse-resources.outputs.backend_tg }} \
+              ALBDNS=${{ steps.parse-alb.outputs.alb_dns }}
 
 #docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow
