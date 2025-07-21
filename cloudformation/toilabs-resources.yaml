@@ -115,7 +115,7 @@ Resources:
       Protocol: HTTP
       Port: 8081
       TargetType: ip
-      HealthCheckPath: /
+      HealthCheckPath: /api/health
       Name: backend-tg
 
   ALBListenerHTTP:

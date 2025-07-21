@@ -14,6 +14,10 @@ def predict():
         return jsonify(result="ALERT")
     else:
         return jsonify(result="NORMAL")
+    
+@app.route('/')
+def health():
+    return "OK", 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=6000)
