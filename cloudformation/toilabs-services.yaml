@@ -185,7 +185,7 @@ Resources:
       ExecutionRoleArn: !Ref TaskExecutionRoleArn
       ContainerDefinitions:
         - Name: airflow
-          Image: docker.io/ataata107/toilabs-ml-model:latest
+          Image: docker.io/ataata107/toilabs-airflow
           PortMappings:
             - ContainerPort: 8080
           Environment:
