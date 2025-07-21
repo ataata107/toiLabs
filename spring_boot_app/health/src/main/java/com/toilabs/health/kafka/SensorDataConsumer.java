@@ -10,25 +10,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class SensorDataConsumer {
 
-    // ObjectMapper is thread-safe — reuse it!
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private ProcessingService processingService;
 
-    @KafkaListener(
-        topics = "sensor.health.raw",
-        groupId = "toi-health",
-        // Optionally add concurrency here or in container factory configuration
-        // concurrency = "4"
-    )
+    @KafkaListener(topics = "sensor.health.raw", groupId = "toi-health")
     public void listen(String message) {
         try {
             SensorData data = mapper.readValue(message, SensorData.class);
             processingService.process(data);
         } catch (Exception e) {
             e.printStackTrace();
-            // Consider logging properly instead of printing in production
         }
     }
 }
