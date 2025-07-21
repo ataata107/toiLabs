@@ -1,7 +1,8 @@
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 
-const socketUrl = "/ws"; //"http://spring-backend:8080/ws"; // not localhost
+const socketUrl =
+  "http://toilabs-alb-1338067063.us-east-1.elb.amazonaws.com/spring-backend/ws"; //"http://spring-backend:8080/ws"; // not localhost
 
 export function connect(callback) {
   const client = new Client({
