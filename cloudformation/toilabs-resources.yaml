@@ -120,7 +120,7 @@ Resources:
       Port: 8081
       TargetType: ip
       HealthCheckPath: /
-      Name: ml-model-tg
+      Name: backend-tg
 
   ALBListenerHTTP:
     Type: AWS::ElasticLoadBalancingV2::Listener
