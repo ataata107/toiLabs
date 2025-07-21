@@ -105,7 +105,7 @@ Resources:
       Protocol: HTTP
       Port: 6000
       TargetType: ip
-      HealthCheckPath: /
+      HealthCheckPath: /ml-model/
       Name: ml-model-tg
 
   BackendTargetGroup:
@@ -115,7 +115,7 @@ Resources:
       Protocol: HTTP
       Port: 8081
       TargetType: ip
-      HealthCheckPath: /api/health
+      HealthCheckPath: /spring-backend/api/health
       Name: backend-tg
 
   ALBListenerHTTP:

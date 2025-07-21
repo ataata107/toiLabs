@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.route("/predict", methods=["POST"])
+@app.route("/ml-model/predict", methods=["POST"])
 def predict():
     data = request.get_json()
     
@@ -15,7 +15,7 @@ def predict():
     else:
         return jsonify(result="NORMAL")
     
-@app.route('/')
+@app.route('/ml-model/')
 def health():
     return "OK", 200
 

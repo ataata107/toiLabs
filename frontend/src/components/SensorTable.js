@@ -2,7 +2,7 @@
 import React from "react";
 import SensorRow from "./SensorRow";
 
-function SensorTable({ data }) {
+function SensorTable({ data = [] }) {
   return (
     <table>
       <thead>

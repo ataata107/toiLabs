@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/spring-backend/api")
 public class SensorDataController {
 
     private final SensorDataRepository repo;
