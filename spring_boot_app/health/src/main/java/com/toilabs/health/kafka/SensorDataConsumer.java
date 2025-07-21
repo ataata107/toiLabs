@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 @Component
 public class SensorDataConsumer {
 
-    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    private final ExecutorService executor = Executors.newFixedThreadPool(1);
 
     @Autowired
     private ProcessingService processingService;

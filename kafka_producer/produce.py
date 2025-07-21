@@ -1,4 +1,5 @@
 from kafka import KafkaProducer
+from kafka.sasl.oauth import AbstractTokenProvider
 from aws_msk_iam_sasl_signer import MSKAuthTokenProvider
 import json
 import socket
@@ -6,14 +7,20 @@ import time
 import random
 
 REGION = "us-east-1"
-BOOTSTRAP_SERVERS = ["<your-bootstrap-broker>:9098"]  # IAM public; use 9098 for private VPC brokers
+BOOTSTRAP_SERVERS = [
+    "b-1-public.toilabsmskcluster.t3vzle.c17.kafka.us-east-1.amazonaws.com:9198",
+    "b-2-public.toilabsmskcluster.t3vzle.c17.kafka.us-east-1.amazonaws.com:9198"
+]  # IAM public; use 9098 for private VPC brokers
 
-class MSKTokenProvider:
+class MSKTokenProvider(AbstractTokenProvider):
+    def __init__(self, region):
+        self.region = region
+
     def token(self):
-        token, _ = MSKAuthTokenProvider.generate_auth_token(REGION)
+        token, _ = MSKAuthTokenProvider.generate_auth_token(self.region)
         return token
 
-tp = MSKTokenProvider()
+tp = MSKTokenProvider(REGION)
 
 producer = KafkaProducer(
     bootstrap_servers=BOOTSTRAP_SERVERS,
@@ -38,6 +45,7 @@ if __name__ == "__main__":
         data = generate_data()
         print("Sending:", data)
         producer.send("sensor.health.raw", data)
+        producer.flush()
         time.sleep(2)
     producer.flush()
     producer.close()

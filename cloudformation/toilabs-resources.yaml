@@ -47,8 +47,8 @@ Resources:
       VpcId: !Ref VPCId
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 9198
-          ToPort: 9198
+          FromPort: 0
+          ToPort: 65535
           CidrIp: 0.0.0.0/0 # For true public, or specify your allowed IP/range
       Tags:
         - Key: Name
