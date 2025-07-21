@@ -218,7 +218,7 @@ Resources:
         EncryptionInTransit: # Must be set for public clusters
           ClientBroker: TLS
           InCluster: true
-      NumberOfBrokerNodes: 1
+      NumberOfBrokerNodes: 2
       BrokerNodeGroupInfo:
         InstanceType: kafka.t3.small
         ClientSubnets:
