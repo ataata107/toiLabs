@@ -101,7 +101,7 @@ Resources:
             - Name: ML_MODEL_URL
               Value: !Sub "http://${ALBDNS}/ml-model/predict"
             - Name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              Value: !Sub "${KafkaAdvertisedHost}:9092"
+              Value: !Ref KafkaAdvertisedHost
             - Name: ALBDNS
               Value: !Ref ALBDNS
 
@@ -238,102 +238,102 @@ Resources:
 
   # -------------------- ZOOKEEPER --------------------
 
-  ZookeeperTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: toilabs-zookeeper-task
-      Cpu: "256"
-      Memory: "512"
-      NetworkMode: awsvpc
-      RequiresCompatibilities: [FARGATE]
-      ExecutionRoleArn: !Ref TaskExecutionRoleArn
-      ContainerDefinitions:
-        - Name: zookeeper
-          Image: confluentinc/cp-zookeeper:7.5.0
-          PortMappings:
-            - ContainerPort: 2181
-          Environment:
-            - Name: ZOOKEEPER_CLIENT_PORT
-              Value: "2181"
-            - Name: ZOOKEEPER_TICK_TIME
-              Value: "2000"
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: /ecs/toilabs
-              awslogs-region: us-east-1
-              awslogs-stream-prefix: toilabs
+  # ZookeeperTaskDefinition:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     Family: toilabs-zookeeper-task
+  #     Cpu: "256"
+  #     Memory: "512"
+  #     NetworkMode: awsvpc
+  #     RequiresCompatibilities: [FARGATE]
+  #     ExecutionRoleArn: !Ref TaskExecutionRoleArn
+  #     ContainerDefinitions:
+  #       - Name: zookeeper
+  #         Image: confluentinc/cp-zookeeper:7.5.0
+  #         PortMappings:
+  #           - ContainerPort: 2181
+  #         Environment:
+  #           - Name: ZOOKEEPER_CLIENT_PORT
+  #             Value: "2181"
+  #           - Name: ZOOKEEPER_TICK_TIME
+  #             Value: "2000"
+  #         LogConfiguration:
+  #           LogDriver: awslogs
+  #           Options:
+  #             awslogs-group: /ecs/toilabs
+  #             awslogs-region: us-east-1
+  #             awslogs-stream-prefix: toilabs
 
-  ZookeeperService:
-    Type: AWS::ECS::Service
-    Properties:
-      Cluster: !Ref ToiLabsCluster
-      LaunchType: FARGATE
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
-          SecurityGroups: [!Ref ServiceSecurityGroupId]
-      TaskDefinition: !Ref ZookeeperTaskDefinition
+  # ZookeeperService:
+  #   Type: AWS::ECS::Service
+  #   Properties:
+  #     Cluster: !Ref ToiLabsCluster
+  #     LaunchType: FARGATE
+  #     DesiredCount: 1
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         AssignPublicIp: ENABLED
+  #         Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+  #         SecurityGroups: [!Ref ServiceSecurityGroupId]
+  #     TaskDefinition: !Ref ZookeeperTaskDefinition
 
   # -------------------- KAFKA --------------------
 
-  KafkaTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: toilabs-kafka-task
-      Cpu: "512"
-      Memory: "1024"
-      NetworkMode: awsvpc
-      RequiresCompatibilities: [FARGATE]
-      ExecutionRoleArn: !Ref TaskExecutionRoleArn
-      ContainerDefinitions:
-        - Name: kafka
-          Image: confluentinc/cp-kafka:7.5.0
-          PortMappings:
-            - ContainerPort: 9092
-          Environment:
-            - Name: KAFKA_BROKER_ID
-              Value: "1"
-            - Name: KAFKA_ZOOKEEPER_CONNECT
-              Value: zookeeper:2181
-            - Name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              Value: PLAINTEXT:PLAINTEXT
-            - Name: KAFKA_LISTENERS
-              Value: PLAINTEXT://0.0.0.0:9092
-            - Name: KAFKA_ADVERTISED_LISTENERS
-              Value: !Sub "PLAINTEXT://${KafkaAdvertisedHost}:9092"
-            - Name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-              Value: "1"
-            - Name: KAFKA_LOG4J_ROOT_LOGLEVEL
-              Value: WARN
-            - Name: KAFKA_LOG4J_LOGGERS
-              Value: |
-                kafka=WARN,
-                kafka.controller=WARN,
-                kafka.log.LogCleaner=WARN,
-                state.change.logger=WARN,
-                kafka.producer.async.DefaultEventHandler=WARN
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: /ecs/toilabs
-              awslogs-region: us-east-1
-              awslogs-stream-prefix: toilabs
+  # KafkaTaskDefinition:
+  #   Type: AWS::ECS::TaskDefinition
+  #   Properties:
+  #     Family: toilabs-kafka-task
+  #     Cpu: "512"
+  #     Memory: "1024"
+  #     NetworkMode: awsvpc
+  #     RequiresCompatibilities: [FARGATE]
+  #     ExecutionRoleArn: !Ref TaskExecutionRoleArn
+  #     ContainerDefinitions:
+  #       - Name: kafka
+  #         Image: confluentinc/cp-kafka:7.5.0
+  #         PortMappings:
+  #           - ContainerPort: 9092
+  #         Environment:
+  #           - Name: KAFKA_BROKER_ID
+  #             Value: "1"
+  #           - Name: KAFKA_ZOOKEEPER_CONNECT
+  #             Value: zookeeper:2181
+  #           - Name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+  #             Value: PLAINTEXT:PLAINTEXT
+  #           - Name: KAFKA_LISTENERS
+  #             Value: PLAINTEXT://0.0.0.0:9092
+  #           - Name: KAFKA_ADVERTISED_LISTENERS
+  #             Value: !Sub "PLAINTEXT://${KafkaAdvertisedHost}:9092"
+  #           - Name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+  #             Value: "1"
+  #           - Name: KAFKA_LOG4J_ROOT_LOGLEVEL
+  #             Value: WARN
+  #           - Name: KAFKA_LOG4J_LOGGERS
+  #             Value: |
+  #               kafka=WARN,
+  #               kafka.controller=WARN,
+  #               kafka.log.LogCleaner=WARN,
+  #               state.change.logger=WARN,
+  #               kafka.producer.async.DefaultEventHandler=WARN
+  #         LogConfiguration:
+  #           LogDriver: awslogs
+  #           Options:
+  #             awslogs-group: /ecs/toilabs
+  #             awslogs-region: us-east-1
+  #             awslogs-stream-prefix: toilabs
 
-  KafkaService:
-    Type: AWS::ECS::Service
-    Properties:
-      Cluster: !Ref ToiLabsCluster
-      LaunchType: FARGATE
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
-          SecurityGroups: [!Ref ServiceSecurityGroupId]
-      TaskDefinition: !Ref KafkaTaskDefinition
+  # KafkaService:
+  #   Type: AWS::ECS::Service
+  #   Properties:
+  #     Cluster: !Ref ToiLabsCluster
+  #     LaunchType: FARGATE
+  #     DesiredCount: 1
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         AssignPublicIp: ENABLED
+  #         Subnets: [!Ref PublicSubnet1Id, !Ref PublicSubnet2Id]
+  #         SecurityGroups: [!Ref ServiceSecurityGroupId]
+  #     TaskDefinition: !Ref KafkaTaskDefinition
 
 Outputs:
   ClusterName:

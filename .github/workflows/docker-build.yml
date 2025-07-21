@@ -117,6 +117,13 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
 
+      - name: Get MSK Bootstrap Brokers
+        id: msk-brokers
+        run: |
+          CLUSTER_ARN=$(aws kafka list-clusters --query "ClusterInfoList[?ClusterName=='toilabs-msk-cluster'].ClusterArn" --output text)
+          BROKERS=$(aws kafka get-bootstrap-brokers --cluster-arn $CLUSTER_ARN --query "BootstrapBrokerString" --output text)
+          echo "::set-output name=bootstrap_brokers::$BROKERS"
+
       - name: Deploy ECS Cluster & Services (toilabs-services)
         run: |
           aws cloudformation deploy \
@@ -131,7 +138,7 @@ jobs:
               AirflowTargetGroupArn=${{ steps.parse-resources.outputs.airflow_tg }} \
               TaskExecutionRoleArn=${{ steps.parse-resources.outputs.task_role }} \
               ServiceSecurityGroupId=${{ steps.parse-resources.outputs.svc_sg }} \
-              KafkaAdvertisedHost=${{ steps.parse-alb.outputs.alb_dns }} \
+              KafkaAdvertisedHost=${{ steps.msk-brokers.outputs.bootstrap_brokers }} \
               RDSEndpoint=${{ steps.parse-resources.outputs.rds_endpoint }} \
               MLModelTargetGroupArn=${{ steps.parse-resources.outputs.ml_tg }} \
               BackendTargetGroupArn=${{ steps.parse-resources.outputs.backend_tg }} \

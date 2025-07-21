@@ -184,6 +184,23 @@ Resources:
       StorageType: gp2
       DeletionProtection: false
 
+  MSKCluster:
+    Type: AWS::MSK::Cluster
+    Properties:
+      ClusterName: toilabs-msk-cluster
+      KafkaVersion: 3.6.0
+      NumberOfBrokerNodes: 2
+      BrokerNodeGroupInfo:
+        InstanceType: kafka.m5.large
+        ClientSubnets:
+          - !Ref PublicSubnet1Id
+          - !Ref PublicSubnet2Id
+        SecurityGroups:
+          - !Ref KafkaSecurityGroup
+      EncryptionInfo:
+        EncryptionInTransit:
+          ClientBroker: PLAINTEXT
+
   # -------------------- IAM --------------------
 
   ECSTaskExecutionRole:
