@@ -3,25 +3,29 @@ FROM apache/airflow:2.9.1
 USER root
 
 # Install NGINX
-RUN apt-get update && apt-get install -y nginx && apt-get clean
+RUN apt-get update && \
+    apt-get install -y nginx && \
+    apt-get clean
 
-# Create a writable temp directory for client body uploads
+# Create writable temp dir for NGINX (to avoid permission issues)
 RUN mkdir -p /tmp/nginx/body && \
     chmod -R 777 /tmp/nginx
 
-# Replace default NGINX config (assumes your config uses /tmp/nginx/body)
-COPY airflow-nginx.conf /etc/nginx/sites-enabled/default
-
-# Copy and make entrypoint executable
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Optional: Remove default nginx user directive warning if not using root
+# Remove default 'user' directive from nginx.conf (avoids warnings when not running as root)
 RUN sed -i '/^user/d' /etc/nginx/nginx.conf
 
-# Switch back to airflow user
+# Copy custom NGINX config and entrypoint script
+COPY airflow-nginx.conf /etc/nginx/sites-enabled/default
+COPY entrypoint.sh /entrypoint.sh
+
+# Make entrypoint script executable
+RUN chmod +x /entrypoint.sh
+
+# Switch back to airflow user (for best practice)
 USER airflow
 
+# Expose the port NGINX listens on
 EXPOSE 8080
 
+# Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
