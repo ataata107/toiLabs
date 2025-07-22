@@ -193,6 +193,8 @@ Resources:
               Value: LocalExecutor
             # - Name: AIRFLOW__API__BASE_URL
             #   Value: !Sub "http://${ALBDNS}/airflow"
+            - Name: AIRFLOW__WEBSERVER__BASE_URL
+              Value: !Sub "http://${ALBDNS}/airflow"
             - Name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
               Value: !Sub "postgresql+psycopg2://toilabs_user:toilabs_pass@${RDSEndpoint}:5432/toilabs"
             - Name: AIRFLOW__CORE__LOAD_EXAMPLES
