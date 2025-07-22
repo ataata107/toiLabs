@@ -12,6 +12,6 @@ airflow users create \
 
 airflow scheduler &
 
-airflow webserver &
+airflow webserver --url-prefix /airflow &
 
 nginx -g 'daemon off;'

@@ -185,7 +185,7 @@ Resources:
       ExecutionRoleArn: !Ref TaskExecutionRoleArn
       ContainerDefinitions:
         - Name: airflow
-          Image: docker.io/ataata107/toilabs-airflow
+          Image: apache/airflow:2.9.1 #docker.io/ataata107/toilabs-airflow
           PortMappings:
             - ContainerPort: 8080
           Environment:
@@ -224,7 +224,7 @@ Resources:
                 --role Admin \
                 --email admin@example.com || true && \
               airflow scheduler & \
-              exec airflow webserver
+              exec airflow webserver --url-prefix /airflow
 
   AirflowService:
     Type: AWS::ECS::Service

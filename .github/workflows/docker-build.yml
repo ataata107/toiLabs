@@ -112,13 +112,13 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model ./ml_service
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend ./spring_boot_app/health
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow ./toilabs-airflow-nginx
+        #docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow ./toilabs-airflow-nginx
       - name: Push Docker images
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow
+        #docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow
 
       - name: Get MSK Bootstrap Brokers
         id: msk-brokers
