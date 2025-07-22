@@ -1,20 +1,20 @@
 # 🧪 ToiLabs Sensor Monitoring Platform
 
-An end-to-end full-stack IoT monitoring platform that collects sensor data, runs predictions using an ML model, stores them in a database, and displays real-time results in a React dashboard.
+An end-to-end full-stack IoT monitoring platform that collects sensor data, runs predictions using an ML model, stores them in a database, and displays real-time results in a React dashboard. The platform is fully integrated with AWS services for scalability and reliability.
 
 ---
 
 ## 🔧 Tech Stack
 
-| Layer            | Technology                                      |
-| ---------------- | ----------------------------------------------- |
-| Frontend         | React, WebSocket, Nginx                         |
-| Backend          | Spring Boot, Kafka Consumer, REST API           |
-| Machine Learning | Flask (Python), Predictive Model                |
-| Data Storage     | PostgreSQL                                      |
-| Messaging        | Apache Kafka, Zookeeper                         |
-| Infrastructure   | Docker Compose, GitHub Actions (CI/CD), Airflow |
-| ETL              | Airflow                                         |
+| Layer            | Technology                                |
+| ---------------- | ----------------------------------------- |
+| Frontend         | React, WebSocket, Nginx                   |
+| Backend          | Spring Boot, Kafka Consumer, REST API     |
+| Machine Learning | Flask (Python), Predictive Model          |
+| Data Storage     | PostgreSQL                                |
+| Messaging        | Apache Kafka (MSK), Zookeeper             |
+| Infrastructure   | AWS CloudFormation, ECS Fargate, ALB, RDS |
+| ETL              | Airflow                                   |
 
 ---
 
@@ -28,7 +28,9 @@ An end-to-end full-stack IoT monitoring platform that collects sensor data, runs
 - 🔁 WebSocket-powered UI updates
 - 🚢 Fully containerized stack (Docker)
 - 📈 Airflow DAG for automated dashboard generation
-- 🧰 Github Actions for CI/CD pipeline
+- 🧰 GitHub Actions for CI/CD pipeline
+- 🌐 AWS MSK for managed Kafka messaging
+- 🏗️ CloudFormation templates for infrastructure provisioning
 
 ---
 
@@ -43,6 +45,7 @@ ToiLabs/
 ├── airflow/             # Airflow DAGs for automation
 ├── spring_boot_app/     # Spring Boot backend with Kafka + DB
 │   └── health/          # Core backend logic (controller/service/repo)
+├── cloudformation/      # AWS CloudFormation templates
 └── .github/             # GitHub Actions CI workflows
 ```
 
@@ -55,6 +58,9 @@ ToiLabs/
 ```bash
 git clone https://github.com/ataata107/toiLabs.git
 cd toiLabs
+git checkout local_dev
+
+#Use main branch for AWS deployment
 ```
 
 ### 2. Build and Start All Services
@@ -95,10 +101,10 @@ pip install kafka-python
 [ Kafka Producer ]
        │
        ▼
-[ Kafka Topic ] ---> [ Spring Boot Kafka Consumer ]
+[ Kafka Topic (AWS MSK) ] ---> [ Spring Boot Kafka Consumer ]
                                 │
                                 ├─> Sends to ML Model (Flask)
-                                ├─> Stores in PostgreSQL
+                                ├─> Stores in PostgreSQL (AWS RDS)
                                 ├─> Broadcast via WebSocket
                                 └─> Triggers Airflow DAG
                                                  │
@@ -127,7 +133,7 @@ pip install kafka-python
 
 ## 🔐 Environment Configuration
 
-No `.env` file needed. All environment variables are defined in `docker-compose.yml` and `application.properties`.
+No `.env` file needed. All environment variables are defined in `docker-compose.yml`, `application.properties`, and CloudFormation templates.
 
 ---
 
@@ -137,20 +143,48 @@ On every push to `main`, GitHub CI:
 
 - Checks out your repo
 - Builds all Docker services via Compose
+- Deploys AWS infrastructure using CloudFormation
 - Validates builds across all components
 
-Workflow file: `.github/workflows/docker-compose-build.yml`
+Workflow file: `.github/workflows/docker-build.yml`
+
+---
+
+## 🏗️ AWS Infrastructure Overview
+
+The platform uses AWS services for scalability and reliability. The infrastructure is provisioned using CloudFormation templates:
+
+### **CloudFormation Templates**
+
+1. **Networking (`toilabs-network.yaml`)**:
+
+   - Creates a VPC with public and private subnets.
+   - Configures an Internet Gateway and Route Tables.
+
+2. **Shared Resources (`toilabs-resources.yaml`)**:
+
+   - Sets up an Application Load Balancer (ALB).
+   - Creates RDS PostgreSQL instance.
+   - Configures AWS MSK (Managed Kafka).
+   - Defines IAM roles and security groups.
+
+3. **ECS Services (`toilabs-services.yaml`)**:
+   - Deploys ECS Fargate services for:
+     - Frontend (React + Nginx)
+     - Backend (Spring Boot)
+     - ML Model (Flask)
+     - Airflow (DAG automation)
 
 ---
 
 ## 🐳 Docker Compose Overview
 
 - PostgreSQL with persistent volume
-- Zookeeper & Kafka brokers
+- Zookeeper & Kafka brokers (local setup)
 - Flask ML model API
 - Spring Boot Kafka consumer + WebSocket backend
 - Nginx-backed React frontend
-- Airflow build and save the files on the local folder
+- Airflow DAGs for ETL automation
 
 ---
 
@@ -166,7 +200,7 @@ Workflow file: `.github/workflows/docker-compose-build.yml`
 
 ## 👨‍💻 Author
 
-Built by Shazeb
+Built by Shazeb  
 Feel free to fork, star ⭐, and contribute!
 
 ---

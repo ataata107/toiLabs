@@ -107,18 +107,18 @@ jobs:
           export BACKEND_HOST=${{ steps.parse-alb.outputs.alb_dns }}
           envsubst '$BACKEND_HOST' < frontend/nginx.template.conf > frontend/nginx.conf
 
-      # - name: Build Docker images
-      #   run: |
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model ./ml_service
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend ./spring_boot_app/health
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
-      #   #docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow ./toilabs-airflow-nginx
-      # - name: Push Docker images
-      #   run: |
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
-      #   #docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow
+      - name: Build Docker images
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model ./ml_service
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend ./spring_boot_app/health
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend ./frontend
+        #docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow ./toilabs-airflow-nginx
+      - name: Push Docker images
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-ml-model
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-spring-backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-frontend
+        #docker push ${{ secrets.DOCKERHUB_USERNAME }}/toilabs-airflow
 
       - name: Get MSK Bootstrap Brokers
         id: msk-brokers
