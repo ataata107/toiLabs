@@ -201,6 +201,8 @@ Resources:
               Value: "False"
             - Name: AIRFLOW__LOGGING__LOGGING_LEVEL
               Value: ERROR
+            - Name: AIRFLOW__WEBSERVER__WEB_SERVER_HOST
+              Value: 0.0.0.0 # ✅ THIS LINE IS CRITICAL
             - Name: GUNICORN_CMD_ARGS
               Value: "--log-level ERROR"
             - Name: PYTHONWARNINGS
