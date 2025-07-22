@@ -224,7 +224,7 @@ Resources:
                 --role Admin \
                 --email admin@example.com || true && \
               airflow scheduler & \
-              exec airflow webserver --url-prefix /airflow
+              exec airflow webserver
 
   AirflowService:
     Type: AWS::ECS::Service
