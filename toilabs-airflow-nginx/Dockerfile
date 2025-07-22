@@ -20,6 +20,8 @@ COPY entrypoint.sh /entrypoint.sh
 
 # Make entrypoint script executable
 RUN chmod +x /entrypoint.sh
+RUN chown -R airflow:airflow /var/lib/nginx /var/log/nginx /tmp/nginx
+
 
 # Switch back to airflow user (for best practice)
 USER airflow
