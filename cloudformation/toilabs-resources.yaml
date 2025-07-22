@@ -101,7 +101,7 @@ Resources:
       Protocol: HTTP
       Port: 8080
       TargetType: ip
-      HealthCheckPath: /health
+      HealthCheckPath: /airflow/health
       HealthCheckIntervalSeconds: 30 # Time between health checks
       HealthCheckTimeoutSeconds: 5 # Timeout for each health check
       HealthyThresholdCount: 2 # Number of successful checks to mark healthy
